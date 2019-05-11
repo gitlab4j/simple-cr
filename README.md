@@ -1,5 +1,6 @@
 # simple-cr
 
-Simple-CR - Simplified code review for GitLab
+Simple-CR - Super simplified code review for GitLab
 
-## Coming Soon
+![Coming Soon](./images/under-construction.png)
+
