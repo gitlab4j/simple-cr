@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset='utf-8'>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Code Review Request</title>
+	<link href="/simple-cr/css/bootstrap-gitlab.css" media="screen" rel="stylesheet" />
+	<link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" media="screen" rel="stylesheet" />
+	<style>
+		
+		/* Tweaks to make the form more responsive */
+		.hint { margin: 0; }
+		#code_review_btns { padding-left: 15px; }
+		h3.page-title { margin-top: 16px; }
+		#merge_request_description { height: 6em; resize: vertical; }
+		.merge-request-form-info { padding-top: 0; }
+		@media (min-width: 768px) {
+		    #code_review_btns { padding-left: 17%; }
+		    h3.page-title { margin-top: 0; }
+		    #merge_request_description { height: 12em; }
+		}
+	
+	</style>
+	
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+	
+		// Contruct the base url for the REST calls
+		var baseUrl = window.location.protocol + '//' + window.location.hostname;
+		if (window.location.port) {
+			baseUrl += ':' + window.location.port;
+		}
+		
+		var pathParts = window.location.pathname.split('/');
+		pathParts.shift();
+		var numPathParts = pathParts.length;
+		if (numPathParts > 4) {
+		
+			for (i = 0; i < numPathParts - 4; i++) {
+				baseUrl += '/' + pathParts[i];	
+			}
+			
+			var projectId    = pathParts[numPathParts - 4];
+			var branchName   = pathParts[numPathParts - 3];
+			var userId       = pathParts[numPathParts - 2];
+			var urlSignature = pathParts[numPathParts - 1];
+		
+		} else {
+			baseUrl += window.location.pathname;
+		}
+		
+		var markdownUrl;
+		
+		$(document).ready(function() {
+		
+		    var ajaxUrl;
+		    if (projectId == undefined || branchName == undefined || userId == undefined || urlSignature == undefined) {
+		        ajaxUrl = baseUrl + "/load";
+		    } else {
+		        ajaxUrl = baseUrl + "/load/" + projectId + "/" + branchName + "/" + userId + "/" + urlSignature;
+		    }
+		
+		    // Load the initial page data
+		    var ajaxRequest = $.ajax({
+		        url: ajaxUrl,
+		        dataType: "json",
+		        timeoute: 15000
+		    });
+		
+		    ajaxRequest.done(function(response, textStatus, jqXHR) {
+		
+		        if (response.success) {
+		
+		            var data = response.data;
+		            var projectWithNamespace = data.group + " | " + data.projectName;
+		            $('.project_name_with_namespace').html(projectWithNamespace);
+		
+		            var nameWithEmail = data.name;
+		            if (data.email && data.email != undefined) nameWithEmail += " &lt;" + data.email + "&gt;";
+		            $('.name_with_email').html(nameWithEmail);
+		
+		            $('.source_branch').html(data.sourceBranch);
+		            $('.target_branch').html(data.targetBranch);
+		
+		            $("input[name='merge_request[source_project_id]']").val(data.projectId);
+		            $("input[name='merge_request[target_project_id]']").val(data.projectId);
+		            $("input[name='merge_request[source_branch]']").val(data.sourceBranch);
+		            $("input[name='merge_request[target_branch]']").val(data.targetBranch);
+		            $("input[name='merge_request[user_id]']").val(data.userId);
+		            $('.merge-info').removeClass('hidden');
+		
+		            if (response.status == 'OK') {
+		
+		            	if (data.targetBranches && data.targetBranches !== undefined) {
+			            	var $targetBranchDropdown = $("#merge_request_target_branch");
+			            	$.each(data.targetBranches, function() {
+			            	    $targetBranchDropdown.append($("<option />").val(this).text(this));
+			            	});
+		
+			            	if (data.targetBranch && data.targetBranch !== undefined) {
+			            		$targetBranchDropdown.val(data.targetBranch);
+			            	}
+		
+			            	$targetBranchDropdown.on('change', function() {
+			            		$('.target_branch').html(this.value);
+			            	});
+		            	}
+		
+		                markdownUrl = data.gitlabWebUrl + '/help/user/markdown';
+		                $('.gitlab-flavored-markdown').attr('href', markdownUrl);
+		                $('.gitlab-flavored-markdown').removeClass('disabled');
+		                $('.form-item').removeAttr('disabled');
+
+		            } else {
+
+		            	$('#merge_request_status').removeClass('alert-danger');
+		                $('#merge_request_status').addClass('alert-info');
+		                $('#merge_request_status').text(response.statusText);
+		                $('#merge_request_status').removeClass('hidden');
+		                $("input[name='merge_request[title]']").val(data.title);
+		                $("textarea[name='merge_request[description]']").val(data.description);
+		            }
+		
+		        } else {
+		
+		            $('#merge_request_status').removeClass('alert-success');
+		            $('#merge_request_status').addClass('alert-danger');
+		            $('#merge_request_status').text(response.statusText);
+		            $('#merge_request_status').removeClass('hidden');
+		        }
+		    });
+		
+		    ajaxRequest.always(function() {
+		           $('.busy-status').hide();
+		           $('.busy-status').removeClass('fa-spin');
+		    });
+		
+		    ajaxRequest.fail(function(jqXHR, textStatus, errorThrown) {
+		        $('#merge_request_status').removeClass('alert-success');
+		        $('#merge_request_status').addClass('alert-danger');
+		        $('#merge_request_status').text('Error: ' + textStatus);
+		        $('#merge_request_status').removeClass('hidden');
+		     });
+		
+		    // Attach a handler to the form
+		    $('form').on('submit', function (e) {
+		
+		        // Important, serialize before the form-items are disabled
+		        var formData = $('form').serialize();
+		        $('.form-item').attr('disabled', 'true');
+		
+		           $('.gitlab-flavored-markdown').addClass('disabled');
+		           $('.gitlab-flavored-markdown').removeAttr('href');
+		
+		        $('.busy-status').addClass('fa-spin');
+		        $('.busy-status').removeClass('hidden');
+		        $('.busy-status').show();
+		
+		        var ajaxRequest = $.ajax({
+		            type: 'post',
+		            url: baseUrl + '/submit',
+		            data: formData,
+		            timeoute: 15000
+		        });
+		
+		        ajaxRequest.always(function() {
+		               $('.busy-status').hide();
+		               $('.busy-status').removeClass('fa-spin');
+		        });
+		
+		        ajaxRequest.done(function(response, textStatus, jqXHR) {
+		
+		            if (response.success) {
+		                $('#merge_request_status').removeClass('alert-danger');
+		                if (response.status == 'OK') {
+		                    $('#merge_request_status').addClass('alert-success');
+		                } else {
+		                    $('#merge_request_status').addClass('alert-info');
+		                }
+		            } else {
+		                $('#merge_request_status').removeClass('alert-success');
+		                $('#merge_request_status').addClass('alert-danger');
+		                $('.form-item').removeAttr("disabled");
+		                $('.gitlab-flavored-markdown').removeClass('disabled');
+		                $('.gitlab-flavored-markdown').attr('href', markdownUrl);
+		            }
+		
+		            $('#merge_request_status').text(response.statusText);
+		            $('#merge_request_status').removeClass('hidden');
+		            $('#merge_request_status').show();
+		        });
+		
+		        ajaxRequest.fail(function(jqXHR, textStatus, errorThrown) {
+		            $('#merge_request_status').removeClass('alert-success');
+		            $('#merge_request_status').addClass('alert-danger');
+		            $('#merge_request_status').text(response.responseText);
+		            $('#merge_request_status').removeClass('hidden');
+		            $('#merge_request_status').show();
+		            $('.form-item').removeAttr('disabled');
+		            $('.gitlab-flavored-markdown').removeClass('disabled');
+		            $('.gitlab-flavored-markdown').attr('href', markdownUrl);
+		        });
+		
+		        e.preventDefault();
+		    });
+		});
+	</script>
+</head>
+
+<body class='ui_mars project' data-page='projects:merge_requests:new' data-project-id='1252'>
+
+    <header class='navbar-gitlab'>
+        <div class='navbar-inner'>
+            <div class='container'>
+                <h1 class='project_name app_logo'>Simple Code Review&nbsp; - &nbsp;
+                    <span class='project_name_with_namespace merge-info hidden'></span>&nbsp;
+                </h1>
+                <i class='pull-right project_name busy-status fa fa-refresh fa-spin'></i>
+            </div>
+        </div>
+    </header>
+
+    <nav class='main-nav navbar-collapse collapse'>
+        <div class='container'>
+            <ul>
+            </ul>
+        </div>
+    </nav>
+
+    <div class='container'>
+        <div class='content'>
+            <h3 class='page-title'>Code Review and Merge Request</h3>
+            <hr>
+            <form accept-charset="UTF-8" action=""
+                class="merge-request-form form-horizontal" id="new_merge_request">
+                <input type="hidden" name="merge_request[user_id]" >
+                <div id="merge_request_status" class="alert hidden"></div>
+                <div class='merge-request-branches'>
+                    <div class='row'>
+                        <div class='col-md-10'>
+                            <div class='pull-left'>
+                                <strong>Merge Info:&nbsp;&nbsp;</strong>
+                            </div>
+                            <div class="merge-info hidden">
+                                <div class='pull-left'>
+                                    <input type="hidden" name="merge_request[source_project_id]" />
+                                    <input type="hidden" name="merge_request[source_branch]"  />
+                                    <span class="project_name_with_namespace"></span>
+                                    &nbsp;|&nbsp;<span class="source_branch"></span>
+                                </div>
+
+                                <div class='pull-left' style="padding-left: 20px;padding-right: 20px;">
+                                    <i class='icon-long-arrow-right'></i>
+                                </div>
+
+                                <div class='pull-left'>
+                                    <input type="hidden" name="merge_request[target_project_id]" />
+                                    <span class="project_name_with_namespace"></span>
+                                    &nbsp;|&nbsp;<span class="target_branch"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-md-10'>
+                            <div class='pull-left'>
+                                <strong>Requested By:&nbsp;&nbsp;</strong>
+                            </div>
+                            <div class="merge-info hidden">
+                                <div class='pull-left'>
+                                    <span class="name_with_email"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class='merge-request-form-info'>
+
+               		<div class='form-group'>
+                    	<label class="control-label pull-left" for="merge_request_target_branch"><strong>Target Branch</strong></label>
+                        <div class='col-sm-10'>
+                             <select id="merge_request_target_branch" class="form-item form-control js-gfm-input" name="merge_request[target_branch]" disabled></select>
+                        </div>
+                    </div>
+
+                    <div class='form-group'>
+                        <label class="control-label pull-left" for="merge_request_title"><strong>Title *</strong></label>
+                        <div class='col-sm-10'>
+                            <input class="form-item form-control pad js-gfm-input"
+                                id="merge_request_title" maxlength="255"
+                                name="merge_request[title]" required="required"
+                                size="255" type="text" disabled />
+                        </div>
+                    </div>
+
+                    <div class='form-group'>
+                        <label class="control-label pull-left" for="merge_request_description">Description</label>
+                        <div class='col-sm-10'>
+                            <textarea class="form-item form-control js-gfm-input"
+                                id="merge_request_description" name="merge_request[description]"
+                                rows="8" disabled></textarea>
+                            <p class="hint">Description is parsed with
+                                <a class="gitlab-flavored-markdown disabled" target="_blank">
+                                    GitLab Flavored Markdown
+                                </a>.
+                            </p>
+                        </div>
+                    </div>
+                    <hr />
+                </div>
+ 
+                <div class='form-actions' id="code_review_btns">
+                    <input class="form-item btn btn-create" name="commit" type="submit" id="merge_request_submit"
+                        value="Submit for code review and merge" disabled />
+                        &nbsp;&nbsp;<i class="busy-status fa fa-refresh fa-spin hidden"></i>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

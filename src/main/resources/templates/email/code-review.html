@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GitLab Push Notification</title>
+</head>
+<body link="blue" vlink="purple" style="width:100%;margin:0;">
+ <div style="width:100%;padding:0;margin:0;display:block;">
+  <table style="border: 0; border-spacing: 0;width:100.0%;height:40px;background:#eeeeee;">
+   <tbody>
+    <tr>
+      <td valign="middle" style="padding:8px;font-size:16px;font-weight:bold;font-family:Helvetica, Arial, sans-serif;color:#666666;">
+        GitLab Project: [[${group}]] / [[${projectName}]]
+      </td>
+    </tr>
+   </tbody>
+  </table>
+ </div>
+ <div style="width:100%;padding:0;margin:0;display:block;">
+  <table style="width:100.0%;border: 0; border-spacing: 0; ">
+    <tbody>
+      <tr>
+        <td style="padding:10px">
+          <p style="font-family:Helvetica, Arial, sans-serif;color:#666666;">
+            Please click on the following link to submit your recent branch push for code review and merging:
+          </p>
+          <p style="font-family:Helvetica, Arial, sans-serif;">
+            <a th:href="${codeReviewLink}">[[${group}]] / [[${projectName}]] / [[${branch}]]</a>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:10px">
+          <p style="font-family:Helvetica, Arial, sans-serif;color:#666666;">You're receiving this notification because you
+          are a member of the [[${group}]] / [[${projectName}]] project team and recently pushed a branch to the project repository.</p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+ </div>
+</body>
+</html>

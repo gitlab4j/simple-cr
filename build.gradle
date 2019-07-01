@@ -1,0 +1,53 @@
+
+plugins {
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'java'
+	id 'eclipse'
+	id 'com.palantir.docker' version '0.22.1'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+
+group = 'org.gitlab4j'
+version = '0.0.1-SNAPSHOT'
+description = 'Simple-CR - GitLab Code Reviews, Simplifed'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+ext {
+    gitlab4jVersion = '4.11.10'
+    h2Version = '1.4.199'
+}
+
+dependencies {
+
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation "org.gitlab4j:gitlab4j-api:${gitlab4jVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	runtimeOnly "com.h2database:h2:$h2Version"
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+task unpack(type: Copy) {
+    dependsOn bootJar
+    from(zipTree(tasks.bootJar.outputs.files.singleFile))
+    into("build/dependency")
+}
+
+docker {
+    name "${project.group}/${bootJar.baseName}"
+    copySpec.from(tasks.unpack.outputs).into("dependency")
+    buildArgs(['DEPENDENCY': "dependency"])
+}
