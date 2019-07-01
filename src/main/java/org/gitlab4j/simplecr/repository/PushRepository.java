@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 public interface PushRepository extends CrudRepository<Push, Long>  {
 
     @Query(value = "SELECT * FROM push WHERE project_id = :projectId AND branch = :branch AND user_id = :userId" +
-            " AND merge_request_id > 0 AND merge_status IS NULL ORDER BY received_at DESC", nativeQuery = true)
+            " AND merge_request_id > 0 ORDER BY received_at DESC", nativeQuery = true)
     public List<Push> findPendingReviews(@Param("userId") int userId,
             @Param("projectId") int projectId, @Param("branch") String branch);
 
