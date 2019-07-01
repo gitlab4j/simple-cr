@@ -183,6 +183,9 @@ public class CodeReviewController {
                 MergeRequest mergeRequest = gitLabApi.getMergeRequestApi().getMergeRequest(projectId, pushList.get(0).getMergeRequestId());
                 title = mergeRequest.getTitle();
                 description = mergeRequest.getDescription();
+                targetBranch = mergeRequest.getTargetBranch();
+                targetBranches = new ArrayList<String>();
+                targetBranches.add(targetBranch);
             } catch (GitLabApiException glae) {
                 logger.warn("Problem getting merge request info, , httpStatus={}, error={}", glae.getHttpStatus(), glae.getMessage());
             }

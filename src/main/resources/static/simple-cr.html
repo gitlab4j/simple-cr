@@ -89,23 +89,23 @@
 		            $("input[name='merge_request[target_branch]']").val(data.targetBranch);
 		            $("input[name='merge_request[user_id]']").val(data.userId);
 		            $('.merge-info').removeClass('hidden');
-		
+
+		            if (data.targetBranches && data.targetBranches !== undefined) {
+						var $targetBranchDropdown = $("#merge_request_target_branch");
+						$.each(data.targetBranches, function() {
+							$targetBranchDropdown.append($("<option />").val(this).text(this));
+						});
+
+						if (data.targetBranch && data.targetBranch !== undefined) {
+							$targetBranchDropdown.val(data.targetBranch);
+						}
+
+						$targetBranchDropdown.on('change', function() {
+							$('.target_branch').html(this.value);
+						});
+					}
+
 		            if (response.status == 'OK') {
-		
-		            	if (data.targetBranches && data.targetBranches !== undefined) {
-			            	var $targetBranchDropdown = $("#merge_request_target_branch");
-			            	$.each(data.targetBranches, function() {
-			            	    $targetBranchDropdown.append($("<option />").val(this).text(this));
-			            	});
-		
-			            	if (data.targetBranch && data.targetBranch !== undefined) {
-			            		$targetBranchDropdown.val(data.targetBranch);
-			            	}
-		
-			            	$targetBranchDropdown.on('change', function() {
-			            		$('.target_branch').html(this.value);
-			            	});
-		            	}
 		
 		                markdownUrl = data.gitlabWebUrl + '/help/user/markdown';
 		                $('.gitlab-flavored-markdown').attr('href', markdownUrl);
