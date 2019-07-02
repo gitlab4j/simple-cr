@@ -9,6 +9,7 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
+import org.gitlab4j.api.webhook.Event;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 import org.gitlab4j.api.webhook.PushEvent;
@@ -82,6 +83,19 @@ public class GitLabWebHookService extends WebHookManager implements WebHookListe
         logger.info("Merge request notification received, userId={}, " +
                 "projectId={}, mergRequestId={}, mergeStatus={}, mergeState={}",
                 userId, projectId, mergeRequestId, mergeStatus, mergeState);
+
+        ProjectConfig projectConfig = projectConfigRepository.findByProjectId(projectId);
+        if (projectConfig == null) {
+            logger.warn("This project is not in the Simple-CR system, projectId=%d", projectId);
+            return;
+        }
+
+        // Make sure this event is for this project config
+        if (!validateSecretToken(projectConfig, mergeRequestEvent)) {
+            logger.warn("The received hook event does not match the project config, projectConfigId={}, secretToken={}",
+                    projectConfig.getId(), mergeRequestEvent.getRequestSecretToken());
+            return;
+        }
 
         // We only operate on merged or closed state changes
         if (!"merged".equals(mergeState) && !"closed".equals(mergeState)) {
@@ -171,7 +185,14 @@ public class GitLabWebHookService extends WebHookManager implements WebHookListe
 
         ProjectConfig projectConfig = projectConfigRepository.findByProjectId(projectId);
         if (projectConfig == null) {
-            logger.info("This project is not in the Simple-CR system, projectId=%d", projectId);
+            logger.warn("This project is not in the Simple-CR system, projectId=%d", projectId);
+            return;
+        }
+
+        // Make sure this event is for this project config
+        if (!validateSecretToken(projectConfig, pushEvent)) {
+            logger.warn("The received hook event does not match the project config, projectConfigId={}, secretToken={}",
+                    projectConfig.getId(), pushEvent.getRequestSecretToken());
             return;
         }
 
@@ -269,5 +290,10 @@ public class GitLabWebHookService extends WebHookManager implements WebHookListe
 
         // Send the code review email
         emailService.sendCodeReviewEmail(user, project, branchName);
+    }
+
+    private boolean validateSecretToken(ProjectConfig projectConfig, Event event) {
+        String expectedSecretToken = "simple-cr-" + projectConfig.getId();
+        return (expectedSecretToken.equals(event.getRequestSecretToken()));
     }
 }
