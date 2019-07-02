@@ -56,6 +56,15 @@ public class AdminController {
 
     private Logger logger = LoggerFactory.getLogger(AdminController.class);
 
+    // Define the merge specs for a standard GitFlow Git Woirkflow
+    private static final String[][]  GITFLOW_MERGE_SPECS = {
+            {"^feature.*", "develop"},
+            {"^bug.*"    , "develop"},
+            {"^develop"  , "master"},
+            {"^hotfix.*" , "master"},
+            {"^release.*", "master"}
+    };
+
     @GetMapping(path = "/{groupName}/{projectName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppResponse<?> getProjectConfig(
             @PathVariable("groupName") String groupName,
@@ -93,7 +102,8 @@ public class AdminController {
             @RequestParam(name = "mail_to", defaultValue = "project") String mailTo,
             @RequestParam(name = "additional_mail_to", required = false) String additionalMailTo,
             @RequestParam(name = "exclude_mail_to", required = false) String excludeMailTo,
-            @RequestParam(name = "include_default_mail_to", defaultValue = "false") Boolean includeDefaultMailTo) {
+            @RequestParam(name = "include_default_mail_to", defaultValue = "false") Boolean includeDefaultMailTo,
+            @RequestParam(name = "getflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
 
         logger.info("Add code review setup for project, group={}, project={}", groupName, projectName);
         final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
@@ -121,23 +131,12 @@ public class AdminController {
             return (AppResponse.getMessageResponse(false, "Invalid mail_to[" + mailTo + "]"));
         }
 
-        // Build the Url to the simple-cr webhook
-        String webhookUrl = StringUtils.buildUrlString(appConfig.getSimpleCrUrl(), request.getContextPath(), "webhook");
-
-        // Add the webhook to the project at the GitLab server
-        ProjectHook projectHook;
-        try {
-            projectHook = gitLabApi.getProjectApi().addHook(projectId, webhookUrl, true, false, true);
-        } catch (GitLabApiException glae) {
-            return (AppResponse.getMessageResponse(false, glae.getMessage()));
-        }
-
         try {
 
             projectConfig = new ProjectConfig();
+            projectConfig.setHookId(0);
             projectConfig.setCreated(new Date());
             projectConfig.setProjectId(projectId);
-            projectConfig.setHookId(projectHook.getId());
             projectConfig.setEnabled(enabled);
             projectConfig.setMailToType(mailToType);
             projectConfig.setAdditionalMailTo(StringUtils.getListFromString(additionalMailTo, ","));
@@ -145,8 +144,38 @@ public class AdminController {
             projectConfig.setIncludeDefaultMailTo(includeDefaultMailTo);
             projectConfig = projectConfigRepository.save(projectConfig);
 
+            if (gitflowMergeSpecs) {
+
+                logger.info("Creating MergeSpecs for GitFlow workflow, projectId={}", projectId);  
+
+                for (String[] spec : GITFLOW_MERGE_SPECS) {
+                    MergeSpec mergeSpec = new MergeSpec(projectConfig, projectId, spec[0], spec[1]);
+                    mergeSpecRepository.save(mergeSpec);
+                }
+
+                logger.info("Finished creating MergeSpecs for GitFlow workflow, projectId={}", projectId);
+            }
+
         } catch (Exception e) {
             return (AppResponse.getMessageResponse(false, e.getMessage()));
+        }
+
+        // Build the Url to the simple-cr webhook
+        String webhookUrl = StringUtils.buildUrlString(appConfig.getSimpleCrUrl(), request.getContextPath(), "webhook");
+
+        // Add the webhook to the project at the GitLab server
+        try {
+            ProjectHook hookConfig = new ProjectHook().withPushEvents(true).withMergeRequestsEvents(true);
+            ProjectHook projectHook = gitLabApi.getProjectApi().addHook(projectId, webhookUrl, hookConfig, false, "simple-cr-" + projectConfig.getId());
+            projectConfig.setHookId(projectHook.getId());
+            projectConfigRepository.save(projectConfig);
+        } catch (GitLabApiException glae) {
+
+            try {
+                projectConfigRepository.delete(projectConfig);
+            } catch (Exception ignore) {}
+
+            return (AppResponse.getMessageResponse(false, glae.getMessage()));
         }
 
         String createdUrl = request.getRequestURL().toString();
@@ -167,7 +196,8 @@ public class AdminController {
         @RequestParam(name = "mail_to", required = false) String mailTo,
         @RequestParam(name = "additional_mail_to", required = false) String additionalMailTo,
         @RequestParam(name = "exclude_mail_to", required = false) String excludeMailTo,
-        @RequestParam(name = "include_default_mail_to", required = false) Boolean includeDefaultMailTo) {
+        @RequestParam(name = "include_default_mail_to", required = false) Boolean includeDefaultMailTo,
+        @RequestParam(name = "getflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
 
         logger.info("Update code review setup for project, group={}, project={}", groupName, projectName);
 
@@ -226,6 +256,26 @@ public class AdminController {
 
         if (includeDefaultMailTo != null) {
             projectConfig.setIncludeDefaultMailTo(includeDefaultMailTo);
+        }
+
+        if (gitflowMergeSpecs) {
+
+            try {
+
+                logger.info("Clearing existing merge specs, projectId={}", projectId);
+                mergeSpecRepository.clearMergeSpecs(projectId);
+
+                logger.info("Creating MergeSpecs for GitFlow workflow, projectId={}", projectId);
+                for (String[] spec : GITFLOW_MERGE_SPECS) {
+                    MergeSpec mergeSpec = new MergeSpec(projectConfig, projectId, spec[0], spec[1]);
+                    mergeSpecRepository.save(mergeSpec);
+                }
+
+            } catch (Exception e) {
+                return (AppResponse.getMessageResponse(false, e.getMessage()));
+            }
+
+            logger.info("Finished creating MergeSpecs for GitFlow workflow, projectId={}", projectId); 
         }
 
         try {

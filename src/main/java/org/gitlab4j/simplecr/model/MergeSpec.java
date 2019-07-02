@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(indexes = {
-    @Index(name = "merge_spec_index", columnList = "project_id, branch_regex, target_branch")
+    @Index(name = "merge_spec_index", columnList = "project_id, branch_regex, target_branch", unique = true)
 })
 public class MergeSpec {
 
@@ -40,6 +40,16 @@ public class MergeSpec {
 
     @Column(name = "target_branch", nullable = false)
     private String targetBranch;
+
+    public MergeSpec() {
+    }
+
+    public MergeSpec(ProjectConfig projectConfig, int projectId, String branchRegex, String targetBranch) {
+        this.projectConfig = projectConfig;
+        this.projectId = projectId;
+        this.branchRegex = branchRegex;
+        this.targetBranch = targetBranch;
+    }
 
     public Long getId() {
         return id;
