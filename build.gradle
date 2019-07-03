@@ -23,7 +23,7 @@ targetCompatibility = 1.8
 
 
 ext {
-    gitlab4jVersion = '4.11.11'
+    gitlab4jVersion = '4.11.12'
     h2Version = '1.4.199'
 }
 
