@@ -54,6 +54,9 @@ public class AdminController {
     @Autowired
     private MergeSpecRepository mergeSpecRepository;
 
+    @Autowired
+    private GitLabApi gitLabApi;
+
     private Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     // Define the merge specs for a standard GitFlow Git Woirkflow
@@ -71,7 +74,6 @@ public class AdminController {
             @PathVariable("projectName") String projectName) {
 
         logger.info("List code review setup for project, group={}, project={}", groupName, projectName);
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Get the specified project
         Project project;
@@ -106,7 +108,6 @@ public class AdminController {
             @RequestParam(name = "getflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
 
         logger.info("Add code review setup for project, group={}, project={}", groupName, projectName);
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Get the specified project
         Project project;
@@ -202,9 +203,6 @@ public class AdminController {
         logger.info("Update code review setup for project, group={}, project={}", groupName, projectName);
 
         // Get the specified project
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
-
-        // Get the specified project
         Project project;
         try {
             project = gitLabApi.getProjectApi().getProject(groupName, projectName);
@@ -286,7 +284,7 @@ public class AdminController {
 
         String createdUrl = request.getRequestURL().toString();
         String message = "Updated project config for " + groupName + "/" + projectName;
-        logger.info("{}, location=", message, createdUrl);
+        logger.info("{}, location={}", message, createdUrl);
         response.addHeader(HttpHeaders.LOCATION, createdUrl);
         return (AppResponse.getResponse(AppResponse.Status.OK, message, projectConfig));
     }
@@ -299,7 +297,6 @@ public class AdminController {
             @PathVariable("projectName") String projectName) {
 
         logger.info("Delete code review setup for project, group={}, project={}", groupName, projectName);
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Get the specified project
         Project project;
@@ -345,7 +342,6 @@ public class AdminController {
             @PathVariable("projectName") String projectName) {
 
         logger.info("List code review merge specs for project, group={}, project={}", groupName, projectName);
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Get the specified project
         Project project;
@@ -385,8 +381,6 @@ public class AdminController {
 
         logger.info("Add code review merge spec for project, group={}, project={}, branchRegex={}, targetBranch={}",
                 groupName, projectName, branchRegex, targetBranch);
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Get the specified project
         Project project;
@@ -434,8 +428,6 @@ public class AdminController {
 
         logger.info("Delete code review merge spec for project, group={}, project={}, branchRegex={}, targetBranch={}",
                 groupName, projectName, branchRegex, targetBranch);
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Get the specified project
         Project project;

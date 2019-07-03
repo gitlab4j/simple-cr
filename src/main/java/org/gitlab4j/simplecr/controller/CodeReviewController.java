@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("")
 public class CodeReviewController {
 
-
     @Autowired
     private SimpleCrConfiguration appConfig;
 
@@ -62,6 +61,9 @@ public class CodeReviewController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private GitLabApi gitLabApi;
 
     private Logger logger = LoggerFactory.getLogger(CodeReviewController.class);
 
@@ -134,8 +136,6 @@ public class CodeReviewController {
             logger.warn("{}, branh={}", message, branchName);
             return (AppResponse.getMessageResponse(false, message + "."));
         }
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         Project project;
         try {
@@ -254,8 +254,6 @@ public class CodeReviewController {
         logger.info("submit: user_id={}, source_project_id={}, sourceBranch={}," +
                 "targetProjectId={}, targetBranch={}, title={}, description={}",
                 userId , sourceProjectId , sourceBranch, targetProjectId, targetBranch, title, description);
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         // Make sure we have this project in the system and it is enabled
         ProjectConfig projectConfig = projectConfigRepository.findByProjectId(targetProjectId);

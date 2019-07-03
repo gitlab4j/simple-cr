@@ -15,7 +15,6 @@ import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 import org.gitlab4j.api.webhook.PushEvent;
 import org.gitlab4j.api.webhook.WebHookListener;
 import org.gitlab4j.api.webhook.WebHookManager;
-import org.gitlab4j.simplecr.config.SimpleCrConfiguration;
 import org.gitlab4j.simplecr.model.MergeSpec;
 import org.gitlab4j.simplecr.model.ProjectConfig;
 import org.gitlab4j.simplecr.model.Push;
@@ -41,9 +40,6 @@ import org.springframework.util.StringUtils;
 public class GitLabWebHookService extends WebHookManager implements WebHookListener {
 
     @Autowired
-    private SimpleCrConfiguration appConfig;
-
-    @Autowired
     private ProjectConfigRepository projectConfigRepository;
 
     @Autowired
@@ -54,6 +50,9 @@ public class GitLabWebHookService extends WebHookManager implements WebHookListe
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private GitLabApi gitLabApi;
 
     private static final Logger logger = LoggerFactory.getLogger(GitLabWebHookService.class);
 
@@ -69,8 +68,6 @@ public class GitLabWebHookService extends WebHookManager implements WebHookListe
      */
     @Override
     public void onMergeRequestEvent(MergeRequestEvent mergeRequestEvent) {
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         ObjectAttributes attributes = mergeRequestEvent.getObjectAttributes();
         String branchName = attributes.getSourceBranch();
@@ -174,8 +171,6 @@ public class GitLabWebHookService extends WebHookManager implements WebHookListe
      */
     @Override
     public void onPushEvent(PushEvent pushEvent) {
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         int userId = pushEvent.getUserId();
         int projectId = pushEvent.getProjectId();

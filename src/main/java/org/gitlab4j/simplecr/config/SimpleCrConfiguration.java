@@ -2,8 +2,10 @@ package org.gitlab4j.simplecr.config;
 
 import java.util.List;
 
+import org.gitlab4j.api.GitLabApi;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
@@ -119,5 +121,10 @@ public class SimpleCrConfiguration {
 
     public void setDbName(String dbName) {
         this.dbName = dbName;
+    }
+
+    @Bean
+    public GitLabApi gitLabApi() {
+        return new GitLabApi(getGitLabApiUrl(), getGitLabApiToken());
     }
 }

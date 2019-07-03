@@ -52,6 +52,9 @@ public class EmailService {
     @Autowired
     private TemplateEngine htmlTemplateEngine;
 
+    @Autowired
+    private GitLabApi gitLabApi;
+
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
@@ -77,8 +80,6 @@ public class EmailService {
         if (!isEmailEnabled()) {
             return (false);
         }
-        
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         Integer projectId = mergeRequest.getProjectId();
         Project project;
@@ -225,8 +226,6 @@ public class EmailService {
      * @return
      */
     private Collection<String> getReviewers(ProjectConfig projectConfig, int groupId, Author author) {
-
-        final GitLabApi gitLabApi = new GitLabApi(appConfig.getGitLabApiUrl(), appConfig.getGitLabApiToken());
 
         TreeSet<String> reviewers = new TreeSet<String>();
         List<Member> members = null;
