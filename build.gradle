@@ -30,24 +30,21 @@ ext {
 dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation "org.gitlab4j:gitlab4j-api:${gitlab4jVersion}"
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation "org.gitlab4j:gitlab4j-api:${gitlab4jVersion}"
 
 	runtimeOnly "com.h2database:h2:$h2Version"
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-task unpack(type: Copy) {
-    dependsOn bootJar
-    from(zipTree(tasks.bootJar.outputs.files.singleFile))
-    into("build/dependency")
-}
-
 docker {
-    name "${project.group}/${bootJar.baseName}"
-    copySpec.from(tasks.unpack.outputs).into("dependency")
-    buildArgs(['DEPENDENCY': "dependency"])
+    name "${project.group}/${bootJar.baseName}:${project.version}"
+    tags 'latest'
+    dependsOn build
+    files bootJar
+    dockerfile file('src/main/docker/Dockerfile')
+    buildArgs([BUILD_VERSION: project.version])
 }
