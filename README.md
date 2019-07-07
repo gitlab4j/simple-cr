@@ -4,10 +4,10 @@ Simple-CR leverages GitLab webhooks and a configurable Git workflow to greatly s
 
 ## Table of Contents
 * [Introduction](#introduction)<br/>
-* [Technology Stack](#technology%20stack)<br/>
+* [Technology Stack](#technology-stack)<br/>
 * [Installation](#installation)<br/>
 * [Configuration](#configuration)<br/>
-* [Usage](#Usage)<br/>
+* [Usage](#usage)<br/>
 
 ---
 ## Introduction
