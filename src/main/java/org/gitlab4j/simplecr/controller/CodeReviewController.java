@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -121,7 +122,7 @@ public class CodeReviewController {
 
         // Make sure there is a merge spec that matches the branch name
         boolean foundBranchMatch = false;
-        List<MergeSpec> mergeSpecs = this.mergeSpecRepository.findByProjectConfigId(projectConfig.getId());
+        List<MergeSpec> mergeSpecs = mergeSpecRepository.findByProjectConfigId(projectConfig.getId());
         if (mergeSpecs != null) {
             for (MergeSpec mergeSpec : mergeSpecs) {
                 if (branchName.matches(mergeSpec.getBranchRegex())) {
@@ -171,7 +172,7 @@ public class CodeReviewController {
         List<Push> pushList = pushRepository.findPendingReviews(userId, projectId, branchName);
         String title = null;
         String description = null;
-        List<String> targetBranches = null;
+        List<String> targetBranches = new ArrayList<String>();
         String targetBranch = null;
         if (pushList != null && pushList.size() > 0) {
 
@@ -184,7 +185,6 @@ public class CodeReviewController {
                 title = mergeRequest.getTitle();
                 description = mergeRequest.getDescription();
                 targetBranch = mergeRequest.getTargetBranch();
-                targetBranches = new ArrayList<String>();
                 targetBranches.add(targetBranch);
             } catch (GitLabApiException glae) {
                 logger.warn("Problem getting merge request info, , httpStatus={}, error={}", glae.getHttpStatus(), glae.getMessage());
@@ -209,11 +209,21 @@ public class CodeReviewController {
 
             } else {
 
+                List<Branch> branches;
+                try {
+                    branches = gitLabApi.getRepositoryApi().getBranches(projectId);
+                } catch (GitLabApiException glae) {
+                    logger.error("Problem getting branches for project, httpStatus={}, error={}", glae.getHttpStatus(), glae.getMessage());
+                    return (AppResponse.getMessageResponse(false, "Could not load project branches."));
+                }
+
                 // Get the list of available target branches for the branch to be merged into
-                targetBranches = new ArrayList<String>();
                 for (MergeSpec mergeSpec : mergeSpecs) {
                     if (branchName.matches(mergeSpec.getBranchRegex())) {
-                        targetBranches.add(mergeSpec.getTargetBranch());
+                        branches.forEach(b -> {
+                            if (b.getName().matches(mergeSpec.getTargetBranchRegex()))
+                                targetBranches.add(b.getName());
+                        });
                     }
                 }
 

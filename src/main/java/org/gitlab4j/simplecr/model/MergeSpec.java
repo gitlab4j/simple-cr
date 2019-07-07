@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(indexes = {
-    @Index(name = "merge_spec_index", columnList = "project_id, branch_regex, target_branch", unique = true)
+    @Index(name = "merge_spec_index", columnList = "project_id, branch_regex, target_branch_regex", unique = true)
 })
 public class MergeSpec {
 
@@ -38,17 +38,17 @@ public class MergeSpec {
     @Column(name = "branch_regex", nullable = false)
     private String branchRegex;
 
-    @Column(name = "target_branch", nullable = false)
-    private String targetBranch;
+    @Column(name = "target_branch_regex", nullable = false)
+    private String targetBranchRegex;
 
     public MergeSpec() {
     }
 
-    public MergeSpec(ProjectConfig projectConfig, int projectId, String branchRegex, String targetBranch) {
+    public MergeSpec(ProjectConfig projectConfig, int projectId, String branchRegex, String targetBranchRegex) {
         this.projectConfig = projectConfig;
         this.projectId = projectId;
         this.branchRegex = branchRegex;
-        this.targetBranch = targetBranch;
+        this.targetBranchRegex = targetBranchRegex;
     }
 
     public Long getId() {
@@ -83,12 +83,12 @@ public class MergeSpec {
         this.branchRegex = branchRegex;
     }
 
-    public String getTargetBranch() {
-        return targetBranch;
+    public String getTargetBranchRegex() {
+        return targetBranchRegex;
     }
 
-    public void setTargetBranch(String targetBranch) {
-        this.targetBranch = targetBranch;
+    public void setTargetBranchRegex(String targetBranchRegex) {
+        this.targetBranchRegex = targetBranchRegex;
     }
 
     @Override
@@ -99,7 +99,7 @@ public class MergeSpec {
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((projectConfig == null) ? 0 : projectConfig.hashCode());
         result = prime * result + ((projectId == null) ? 0 : projectId.hashCode());
-        result = prime * result + ((targetBranch == null) ? 0 : targetBranch.hashCode());
+        result = prime * result + ((targetBranchRegex == null) ? 0 : targetBranchRegex.hashCode());
         return result;
     }
 
@@ -141,10 +141,10 @@ public class MergeSpec {
             return false;
         }
 
-        if (targetBranch == null) {
-            if (other.targetBranch != null)
+        if (targetBranchRegex == null) {
+            if (other.targetBranchRegex != null)
                 return false;
-        } else if (!targetBranch.equals(other.targetBranch)) {
+        } else if (!targetBranchRegex.equals(other.targetBranchRegex)) {
             return false;
         }
 

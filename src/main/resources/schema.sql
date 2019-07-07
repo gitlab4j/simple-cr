@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS push (
 	id INT AUTO_INCREMENT(1, 1) PRIMARY KEY,
 	received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	user_id INT NOT NULL,
-	branch VARCHAR(64) NOT NULL,
+	branch VARCHAR(80) NOT NULL,
 	project_id INT NOT NULL,
 	before VARCHAR(64),
 	after VARCHAR(64),
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS merge_spec (
 	project_config_id INT,
 	project_id INT,
 	branch_regex VARCHAR(128) NOT NULL,
-	target_branch VARCHAR(64) NOT NULL,
+	target_branch_regex VARCHAR(128) NOT NULL,
 	FOREIGN KEY (project_config_id) REFERENCES project_config(id) ON DELETE CASCADE);
 
-CREATE UNIQUE INDEX IF NOT EXISTS merge_spec_index ON merge_spec(project_id, branch_regex, target_branch);
+CREATE UNIQUE INDEX IF NOT EXISTS merge_spec_index ON merge_spec(project_id, branch_regex, target_branch_regex);

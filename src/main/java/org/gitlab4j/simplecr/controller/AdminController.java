@@ -61,11 +61,12 @@ public class AdminController {
 
     // Define the merge specs for a standard GitFlow Git Woirkflow
     private static final String[][]  GITFLOW_MERGE_SPECS = {
-            {"^feature.*", "develop"},
-            {"^bug.*"    , "develop"},
-            {"^develop"  , "master"},
-            {"^hotfix.*" , "master"},
-            {"^release.*", "master"}
+            {"^feature.*", "^develop"},
+            {"^bug.*"    , "^develop"},
+            {"^develop"  , "^master"},
+            {"^develop"  , "^release.*"},
+            {"^hotfix.*" , "^master"},
+            {"^release.*", "^master"}
     };
 
     @GetMapping(path = "/{groupName}/{projectName}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -101,11 +102,11 @@ public class AdminController {
             @PathVariable("groupName") String groupName,
             @PathVariable("projectName") String projectName,
             @RequestParam(name = "enabled", defaultValue = "true") Boolean enabled,
-            @RequestParam(name = "mail_to", defaultValue = "project") String mailTo,
+            @RequestParam(name = "mail_to_type", defaultValue = "project") String mailTo,
             @RequestParam(name = "additional_mail_to", required = false) String additionalMailTo,
             @RequestParam(name = "exclude_mail_to", required = false) String excludeMailTo,
             @RequestParam(name = "include_default_mail_to", defaultValue = "false") Boolean includeDefaultMailTo,
-            @RequestParam(name = "getflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
+            @RequestParam(name = "gitflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
 
         logger.info("Add code review setup for project, group={}, project={}", groupName, projectName);
 
@@ -194,7 +195,7 @@ public class AdminController {
         @PathVariable("groupName") String groupName,
         @PathVariable("projectName") String projectName,
         @RequestParam(name = "enabled", required = false) Boolean enabled,
-        @RequestParam(name = "mail_to", required = false) String mailTo,
+        @RequestParam(name = "mail_to_type", required = false) String mailTo,
         @RequestParam(name = "additional_mail_to", required = false) String additionalMailTo,
         @RequestParam(name = "exclude_mail_to", required = false) String excludeMailTo,
         @RequestParam(name = "include_default_mail_to", required = false) Boolean includeDefaultMailTo,
@@ -407,7 +408,7 @@ public class AdminController {
             mergeSpec.setProjectConfig(projectConfig);
             mergeSpec.setProjectId(projectId);
             mergeSpec.setBranchRegex(branchRegex);
-            mergeSpec.setTargetBranch(targetBranch);
+            mergeSpec.setTargetBranchRegex(targetBranch);
             mergeSpec = mergeSpecRepository.save(mergeSpec);
 
         } catch (Exception e) {
