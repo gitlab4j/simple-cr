@@ -1,5 +1,6 @@
 package org.gitlab4j.simplecr.model;
 
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,21 +25,23 @@ public class ProjectConfig {
     public enum MailToType {
         NONE, GROUP, PROJECT;
 
-        public static final MailToType findByString(String s) {
+        public static final MailToType fromValue(String value) {
 
-            if (s == null) {
+            if (value == null) {
                 return (null);
             }
 
-            s = s.trim().toUpperCase();
-            if (s.length() == 0) {
+            value = value.trim().toUpperCase();
+            if (value.length() == 0) {
                 return (null);
             }
 
-            try {
-                return (MailToType.valueOf(s));
-            } catch (IllegalArgumentException iae) {
-                return (null);
+            return (MailToType.valueOf(value));
+        }
+
+        public static final class Converter extends PropertyEditorSupport {
+            public void setAsText(final String text) throws IllegalArgumentException {
+                setValue(MailToType.fromValue(text));
             }
         }
     }
