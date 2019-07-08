@@ -21,9 +21,9 @@ import org.gitlab4j.simplecr.model.MergeSpec;
 import org.gitlab4j.simplecr.model.ProjectConfig;
 import org.gitlab4j.simplecr.model.Push;
 import org.gitlab4j.simplecr.repository.MergeSpecRepository;
-import org.gitlab4j.simplecr.repository.ProjectConfigRepository;
 import org.gitlab4j.simplecr.repository.PushRepository;
 import org.gitlab4j.simplecr.service.EmailService;
+import org.gitlab4j.simplecr.service.ProjectConfigService;
 import org.gitlab4j.simplecr.utils.HashUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +52,6 @@ public class CodeReviewController {
     private SimpleCrConfiguration appConfig;
 
     @Autowired
-    private ProjectConfigRepository projectConfigRepository;
-
-    @Autowired
     private PushRepository pushRepository;
     
     @Autowired
@@ -62,6 +59,9 @@ public class CodeReviewController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ProjectConfigService projectConfigService;
 
     @Autowired
     private GitLabApi gitLabApi;
@@ -113,7 +113,7 @@ public class CodeReviewController {
         }
 
         // Make sure we have this project in the system and it is enabled
-        ProjectConfig projectConfig = projectConfigRepository.findByProjectId(projectId);
+        ProjectConfig projectConfig = projectConfigService.getProjectConfig(projectId);
         if (projectConfig == null) {
             String message = "The specified project was not found in Simple-CR system";
             logger.warn("{}, projectId={}", message, projectId);
@@ -140,7 +140,7 @@ public class CodeReviewController {
 
         Project project;
         try {
-            project = gitLabApi.getProjectApi().getProject(projectId);
+            project = projectConfigService.getProject(projectId);
         } catch (GitLabApiException glae) {
             logger.error("Problem getting project info, httpStatus={}, error={}", glae.getHttpStatus(), glae.getMessage());
             return (AppResponse.getMessageResponse(false, "Could not load project info for code review"));
@@ -266,7 +266,7 @@ public class CodeReviewController {
                 userId , sourceProjectId , sourceBranch, targetProjectId, targetBranch, title, description);
 
         // Make sure we have this project in the system and it is enabled
-        ProjectConfig projectConfig = projectConfigRepository.findByProjectId(targetProjectId);
+        ProjectConfig projectConfig = projectConfigService.getProjectConfig(targetProjectId);
         if (projectConfig == null) {
             logger.info("The target project is not in the simple-cr system, targetProjectId={}", targetProjectId);
             String message = "The specified project was not found in Simple-CR system.";
