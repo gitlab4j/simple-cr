@@ -17,8 +17,8 @@ public interface MergeSpecRepository extends CrudRepository<MergeSpec, Long>  {
     List<MergeSpec> findByProjectConfigId(Long projectConfigId);
 
     @Query(value = "SELECT * FROM merge_spec" +
-            " WHERE project_id = :projectId AND branch_regex = :branchRegex AND target_branch = :targetBranch", nativeQuery = true)
-    Optional<MergeSpec> find(@Param("projectId") Integer projectId, @Param("branchRegex") String branchRegex, @Param("targetBranch") String targetBranch);
+            " WHERE project_id = :projectId AND branch_regex = :branchRegex AND target_branch_regex = :targetBranchRegex", nativeQuery = true)
+    Optional<MergeSpec> find(@Param("projectId") Integer projectId, @Param("branchRegex") String branchRegex, @Param("targetBranchRegex") String targetBranchRegex);
 
     @Transactional
     @Modifying
