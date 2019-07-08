@@ -168,8 +168,6 @@ public class AdminController {
 
     @DeleteMapping(path = "/{groupName}/{projectName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppResponse<?> deleteProjectConfig(
-            HttpServletRequest request,
-            HttpServletResponse response,
             @PathVariable("groupName") String groupName,
             @PathVariable("projectName") String projectName) {
 
@@ -233,8 +231,6 @@ public class AdminController {
 
     @PostMapping(path = "/{groupName}/{projectName}/merge_specs", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppResponse<?> addMergeSpec(
-            HttpServletRequest request,
-            HttpServletResponse response,
             @PathVariable("groupName") String groupName,
             @PathVariable("projectName") String projectName,
             @RequestParam("branch_regex") String branchRegex,
@@ -263,8 +259,6 @@ public class AdminController {
 
     @DeleteMapping(path = "/{groupName}/{projectName}/merge_specs", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppResponse<?> deleteMergeSpec(
-            HttpServletRequest request,
-            HttpServletResponse response,
             @PathVariable("groupName") String groupName,
             @PathVariable("projectName") String projectName,
             @RequestParam("branch_regex") String branchRegex,
