@@ -134,7 +134,7 @@ public class AdminController {
         @RequestParam(name = "additional_mail_to", required = false) String additionalMailTo,
         @RequestParam(name = "exclude_mail_to", required = false) String excludeMailTo,
         @RequestParam(name = "include_default_mail_to", required = false) Boolean includeDefaultMailTo,
-        @RequestParam(name = "getflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
+        @RequestParam(name = "gitflow_merge_specs", defaultValue = "false") Boolean gitflowMergeSpecs) {
 
         logger.info("Update code review setup for project, group={}, project={}", groupName, projectName);
 
